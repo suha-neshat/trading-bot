@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SMA Crossover Trading Bot on AWS Lambda with EventBridge schedule
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Runtime: python3.11
+Parameters:
+  ScheduleExpression:
+    Type: String
+    Default: "cron(0/5 * * * ? *)"
+Resources:
+  TradingBotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.bot.handler
+      CodeUri: .
+      Runtime: python3.11
+      Environment:
+        Variables:
+          ALPACA_BASE_URL: !Ref AlpacaBaseUrl
+          ALPACA_KEY_ID: !Ref AlpacaKeyId
+          ALPACA_SECRET_KEY: !Ref AlpacaSecretKey
+          SYMBOLS: !Ref Symbols
+          TIMEFRAME: !Ref Timeframe
+          FAST_WINDOW: !Ref FastWindow
+          SLOW_WINDOW: !Ref SlowWindow
+          MAX_NOTIONAL_PER_SYMBOL: !Ref MaxNotionalPerSymbol
+          MAX_POSITION_USD: !Ref MaxPositionUsd
+          STOP_LOSS_PCT: !Ref StopLossPct
+          TAKE_PROFIT_PCT: !Ref TakeProfitPct
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+Parameters:
+  AlpacaBaseUrl:
+    Type: String
+    Default: "https://paper-api.alpaca.markets"
+  AlpacaKeyId:
+    Type: String
+  AlpacaSecretKey:
+    Type: String
+  Symbols:
+    Type: String
+    Default: "AAPL,MSFT"
+  Timeframe:
+    Type: String
+    Default: "1h"
+  FastWindow:
+    Type: Number
+    Default: 20
+  SlowWindow:
+    Type: Number
+    Default: 50
+  MaxNotionalPerSymbol:
+    Type: Number
+    Default: 500
+  MaxPositionUsd:
+    Type: Number
+    Default: 1000
+  StopLossPct:
+    Type: Number
+    Default: 0.03
+  TakeProfitPct:
+    Type: Number
+    Default: 0.06
